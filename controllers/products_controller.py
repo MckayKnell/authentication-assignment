@@ -3,7 +3,7 @@ from flask import jsonify, request
 from db import db
 from lib.authenticate import auth, auth_admin
 from models.products import Products, product_schema, products_schema
-from models.category import Categories
+from models.categories import Categories
 from util.reflection import populate_object
 
 
@@ -77,20 +77,14 @@ def product_by_id(req, product_id):
     if not query:
         return jsonify({"message": f'product could not be found'}), 404
 
-    return jsonify({"message": "product found", "results": products_schema.dump(query)}), 200
+    return jsonify({"message": "product found", "results": product_schema.dump(query)}), 200
 
 
 @auth_admin
 def product_update(request, product_id):
     query = db.session.query(Products).filter(Products.product_id == product_id).first()
     post_data = request.form if request.form else request.get_json()
-    print(post_data)
-
-    query.product_id = post_data.get("product_id", query.product_id)
-    query.product_name = post_data.get("product_name", query.product_name)
-    query.description = post_data.get("description", query.description)
-    query.price = post_data.get("price", query.price)
-    query.active = post_data.get("active", query.active)
+    populate_object(query, post_data)
 
     try:
         db.session.commit()

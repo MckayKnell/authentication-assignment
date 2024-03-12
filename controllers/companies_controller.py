@@ -2,7 +2,7 @@ from flask import jsonify
 
 from db import db
 from lib.authenticate import auth, auth_admin
-from models.company import Companies, company_schema, companies_Schema
+from models.companies import Companies, company_schema, companies_Schema
 from util.reflection import populate_object
 
 
@@ -35,7 +35,7 @@ def company_add(req):
 
 
 @auth
-def companies_get(req):
+def companies_get_all(req):
     query = db.session.query(Companies).all()
 
     return jsonify({"message": "company found", "results": companies_Schema.dump(query)}), 200
@@ -67,18 +67,3 @@ def company_update(req, company_id):
     except:
         db.session.rollback()
         return jsonify({"message": "unable to update record"}), 400
-
-
-@auth_admin
-def delete_category_by_id(req, category_id, product_id):
-    category_query = db.session.query(Categories).filter(Categories.category_id == category_id).first()
-    products_query = db.session.query(Products).filter(Products.product_id == product_id).first()
-
-    if not category_query:
-        return jsonify({'message': ' category does not exist'}), 400
-
-    for product in products_query:
-        if category_query in product.categories:
-            products_query.categories.remove(category_query)
-
-            return ({'message': 'products removed', 'result': category_schema.dump(category_query)})
